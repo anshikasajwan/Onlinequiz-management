@@ -40,7 +40,6 @@ CREATE TABLE Results (
     user_id INT,
     quiz_id INT,
     score INT NOT NULL,
-    attempt_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (quiz_id) REFERENCES Quizzes(quiz_id)
 );
