@@ -87,24 +87,34 @@ def quiz_interface():
 
     # UI for Questions
     for i, q in enumerate(questions):
-        # Using a unique key for expanders is safer
         with st.expander(f"Question {i+1}", expanded=True):
+            # 1. This variable defines the NAME of the entry in Session State
+            submit_key = f"submitted_{q['question_id']}"
+            
             st.write(f"### {q['question_text']}")
             
-            # Fetch Options for this specific question
             cursor.execute("SELECT option_text FROM Options WHERE question_id = %s", (q['question_id'],))
             options = [opt['option_text'] for opt in cursor.fetchall()]
             
-            # Ensure radio key is unique
             user_choice = st.radio("Choose the correct option:", options, key=f"user_q_{q['question_id']}")
 
+            # 2. The Button Logic
             if st.button("Submit Choice", key=f"btn_{q['question_id']}"):
-                if user_choice == q['correct_option']:
-                    st.success("Correct!")
-                    st.session_state.score += 5
-                else:
-                    st.error(f"Wrong! Correct answer: {q['correct_option']}")
+                # Check if it was already submitted to prevent double-scoring
+                if not st.session_state.get(submit_key):
+                    st.session_state[submit_key] = True  # Save the submission PERMANENTLY
+                    
+                    if user_choice == q['correct_option']:
+                        st.session_state.score += 5
+                    
+                    st.rerun() # Forces a refresh to show the "Submitted" info box immediately
 
+            # 3. The Status Display
+            # This checks the permanent session memory, not a local variable
+            if st.session_state.get(submit_key):
+                st.info("Submitted")
+            else:
+                st.warning("Not submitted")
     st.divider() # Adds a clean line before the finish button
 
     if st.button("🏁 Finish & Save Result"):
